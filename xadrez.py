@@ -1,29 +1,37 @@
+import streamlit as st
 import chess
 
-board = chess.Board()
+st.title("♟️ Xadrez Web")
 
-print("♟️ Xadrez no Termux (digite 'sair' para encerrar)\n")
+# Inicializa o tabuleiro no estado da sessão do Streamlit
+if 'board' not in st.session_state:
+    st.session_state.board = chess.Board()
 
-while not board.is_game_over():
-    print(board)
-    print("\nTurno:", "Brancas" if board.turn else "Pretas")
+board = st.session_state.board
 
-    move = input("Digite o movimento (ex: e2e4): ").strip()
+# Exibe o tabuleiro de forma textual (ou como código)
+st.code(str(board))
 
-    if move.lower() == "sair":
-        break
+st.write(f"**Turno:** {'Brancas' if board.turn else 'Pretas'}")
 
-    try:
-        board.push_uci(move)
-    except:
-        print("❌ Movimento inválido!\n")
-        continue
+# Interface visual para o movimento
+move = st.text_input("Digite o movimento (ex: e2e4):")
 
-    if board.is_check():
-        print("⚠️ CHEQUE!\n")
+if st.button("Enviar Movimento"):
+    if move:
+        try:
+            board.push_uci(move.strip())
+            st.rerun() # Recarrega a página para atualizar o tabuleiro
+        except ValueError:
+            st.error("❌ Movimento inválido!")
 
-if board.is_checkmate():
-    print("\n♚ CHEQUE-MATE!")
-    print("Vencedor:", "Pretas" if board.turn else "Brancas")
-elif board.is_stalemate():
-    print("\n🤝 Empate!")
+if board.is_game_over():
+    st.success("Fim de jogo!")
+    if board.is_checkmate():
+        st.write(f"Vencedor: {'Pretas' if board.turn else 'Brancas'}")
+    elif board.is_stalemate():
+        st.write("🤝 Empate!")
+    
+    if st.button("Reiniciar Jogo"):
+        st.session_state.board = chess.Board()
+        st.rerun()
